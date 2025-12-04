@@ -1,20 +1,22 @@
-export const config = {
-  runtime: 'edge',
-};
-
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
 
-export default async function handler(req) {
+export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const data = await req.json();
+    const data = req.body;
 
     const fields = {
       Nom: data.nom,
@@ -51,22 +53,13 @@ export default async function handler(req) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Airtable error:', errorData);
-      return new Response(JSON.stringify({ error: 'Error en guardar les dades' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(500).json({ error: 'Error en guardar les dades' });
     }
 
     const result = await response.json();
-    return new Response(JSON.stringify({ success: true, id: result.id }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json({ success: true, id: result.id });
   } catch (error) {
     console.error('Server error:', error);
-    return new Response(JSON.stringify({ error: 'Error del servidor' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(500).json({ error: 'Error del servidor' });
   }
 }
