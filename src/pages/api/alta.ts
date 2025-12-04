@@ -10,7 +10,7 @@ export const POST: APIRoute = async ({ request }) => {
     const fields: Record<string, unknown> = {
       Nom: data.nom,
       Cognoms: data.cognoms,
-      Email: data.email,
+      Mail: data.email,
       'Telèfon': data.telefon,
     };
 
