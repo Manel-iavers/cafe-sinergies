@@ -1,24 +1,13 @@
-const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+import type { APIRoute } from 'astro';
 
-export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const AIRTABLE_TOKEN = import.meta.env.AIRTABLE_TOKEN;
+const AIRTABLE_BASE_ID = import.meta.env.AIRTABLE_BASE_ID;
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export const POST: APIRoute = async ({ request }) => {
   try {
-    const data = req.body;
+    const data = await request.json();
 
-    const fields = {
+    const fields: Record<string, unknown> = {
       Nom: data.nom,
       Cognoms: data.cognoms,
       Email: data.email,
@@ -53,13 +42,22 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Airtable error:', errorData);
-      return res.status(500).json({ error: 'Error en guardar les dades' });
+      return new Response(
+        JSON.stringify({ error: 'Error en guardar les dades' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const result = await response.json();
-    return res.status(200).json({ success: true, id: result.id });
+    return new Response(
+      JSON.stringify({ success: true, id: result.id }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Server error:', error);
-    return res.status(500).json({ error: 'Error del servidor' });
+    return new Response(
+      JSON.stringify({ error: 'Error del servidor' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
-}
+};
