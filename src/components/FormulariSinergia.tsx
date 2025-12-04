@@ -10,8 +10,8 @@ interface Props {
   membres: Membre[];
 }
 
-const AIRTABLE_TOKEN = 'patTv1BqX9fDHTs96.f6600aa8289df9930fb8d402292176267eab5bb66cbb41489db4156b77634ed5';
-const AIRTABLE_BASE_ID = 'app5KbgovIUVTlfB1';
+// API endpoint per crear sinergies
+const API_SINERGIA = '/api/sinergia';
 
 const TIPUS_SINERGIA = [
   'Comercial',
@@ -77,32 +77,18 @@ export default function FormulariSinergia({ membres }: Props) {
       
       const titol = [nomActual, ...membresNoms].join(' + ');
 
-      const fields: Record<string, unknown> = {
-        Títol: titol,
-        Membres: [formData.membreActual, ...formData.membresColaboradors],
-        Tipus: formData.tipus,
-        Descripció: formData.descripcio || undefined,
-        Data: new Date().toISOString().split('T')[0],
-      };
-
-      // Remove undefined values
-      Object.keys(fields).forEach(key => {
-        if (fields[key] === undefined) {
-          delete fields[key];
-        }
+      const response = await fetch(API_SINERGIA, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          titol,
+          membres: [formData.membreActual, ...formData.membresColaboradors],
+          tipus: formData.tipus,
+          descripcio: formData.descripcio || undefined,
+        }),
       });
-
-      const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Sinergies`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        }
-      );
 
       if (!response.ok) {
         const errorData = await response.json();

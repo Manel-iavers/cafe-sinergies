@@ -24,8 +24,8 @@ interface FormData {
   pobleId: string;
 }
 
-const AIRTABLE_TOKEN = 'patTv1BqX9fDHTs96.f6600aa8289df9930fb8d402292176267eab5bb66cbb41489db4156b77634ed5';
-const AIRTABLE_BASE_ID = 'app5KbgovIUVTlfB1';
+// API endpoint per crear membres
+const API_ALTA = '/api/alta';
 
 export default function FormulariAlta({ pobles, sectors }: Props) {
   const [step, setStep] = useState(0); // 0 = validar token
@@ -117,49 +117,31 @@ export default function FormulariAlta({ pobles, sectors }: Props) {
     setError('');
 
     try {
-      const fields: Record<string, unknown> = {
-        Nom: formData.nom,
-        Cognoms: formData.cognoms,
-        Empresa: formData.empresa || undefined,
-        Web: formData.web || undefined,
-        Email: formData.email,
-        'Telèfon': formData.telefon,
-        'Adreça': formData.adreca || undefined,
-        Municipi: formData.municipi || undefined,
-        Instagram: formData.instagram || undefined,
-        LinkedIn: formData.linkedin || undefined,
-        Youtube: formData.youtube || undefined,
-        'Altres XXSS': formData.altresXxss || undefined,
-        'Descripció': formData.descripcio,
-        'Petició': formData.peticio || undefined,
-      };
 
-      if (formData.pobleId) {
-        fields.Poble = [formData.pobleId];
-      }
-      
-      if (formData.sectors.length > 0) {
-        fields.Sector = formData.sectors;
-      }
-
-      // Remove undefined values
-      Object.keys(fields).forEach(key => {
-        if (fields[key] === undefined) {
-          delete fields[key];
-        }
+      const response = await fetch(API_ALTA, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nom: formData.nom,
+          cognoms: formData.cognoms,
+          empresa: formData.empresa || undefined,
+          web: formData.web || undefined,
+          email: formData.email,
+          telefon: formData.telefon,
+          adreca: formData.adreca || undefined,
+          municipi: formData.municipi || undefined,
+          instagram: formData.instagram || undefined,
+          linkedin: formData.linkedin || undefined,
+          youtube: formData.youtube || undefined,
+          altresXxss: formData.altresXxss || undefined,
+          descripcio: formData.descripcio,
+          peticio: formData.peticio || undefined,
+          pobleId: formData.pobleId || undefined,
+          sectors: formData.sectors.length > 0 ? formData.sectors : undefined,
+        }),
       });
-
-      const response = await fetch(
-        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Membres`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ fields }),
-        }
-      );
 
       if (!response.ok) {
         throw new Error('Error en guardar les dades');
