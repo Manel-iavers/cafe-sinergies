@@ -22,7 +22,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (data.linkedin) fields.LinkedIn = data.linkedin;
     if (data.youtube) fields.Youtube = data.youtube;
     if (data.altresXxss) fields['Altres XXSS'] = data.altresXxss;
-    if (data.descripcio) fields['Descripció'] = data.descripcio;
+    if (data.descripcio) fields['Descripció '] = data.descripcio;
     if (data.peticio) fields['Petició'] = data.peticio;
     if (data.pobleId) fields.Poble = [data.pobleId];
     if (data.sectors && data.sectors.length > 0) fields.Sector = data.sectors;
