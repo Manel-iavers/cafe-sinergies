@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Props {
-  pobleId: string;
-  pobleName: string;
+  pobles: { id: string; nom: string; token: string }[];
   sectors: { id: string; nom: string }[];
 }
 
@@ -22,13 +21,18 @@ interface FormData {
   descripcio: string;
   peticio: string;
   sectors: string[];
+  pobleId: string;
 }
 
-export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
-  const [step, setStep] = useState(1);
+const AIRTABLE_TOKEN = 'patTv1BqX9fDHTs96.f6600aa8289df9930fb8d402292176267eab5bb66cbb41489db4156b77634ed5';
+const AIRTABLE_BASE_ID = 'app5KbgovIUVTlfB1';
+
+export default function FormulariAlta({ pobles, sectors }: Props) {
+  const [step, setStep] = useState(0); // 0 = validar token
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [pobleSeleccionat, setPobleSeleccionat] = useState<{ id: string; nom: string } | null>(null);
   
   const [formData, setFormData] = useState<FormData>({
     nom: '',
@@ -46,7 +50,25 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
     descripcio: '',
     peticio: '',
     sectors: [],
+    pobleId: '',
   });
+
+  // Validar token a l'URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t');
+    
+    if (token) {
+      const poble = pobles.find(p => p.token === token);
+      if (poble) {
+        setPobleSeleccionat({ id: poble.id, nom: poble.nom });
+        setFormData(prev => ({ ...prev, pobleId: poble.id }));
+        setStep(1);
+      } else {
+        setError('El link d\'invitació no és vàlid.');
+      }
+    }
+  }, [pobles]);
 
   const updateField = (field: keyof FormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,9 +98,9 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
   };
 
   const handleNext = () => {
-    const error = step === 1 ? validateStep1() : validateStep2();
-    if (error) {
-      setError(error);
+    const validationError = step === 1 ? validateStep1() : validateStep2();
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setError('');
@@ -95,18 +117,52 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
     setError('');
 
     try {
-      const response = await fetch('/api/alta', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          pobleId,
-        }),
+      const fields: Record<string, unknown> = {
+        Nom: formData.nom,
+        Cognoms: formData.cognoms,
+        Empresa: formData.empresa || undefined,
+        Web: formData.web || undefined,
+        Email: formData.email,
+        'Telèfon': formData.telefon,
+        'Adreça': formData.adreca || undefined,
+        Municipi: formData.municipi || undefined,
+        Instagram: formData.instagram || undefined,
+        LinkedIn: formData.linkedin || undefined,
+        Youtube: formData.youtube || undefined,
+        'Altres XXSS': formData.altresXxss || undefined,
+        'Descripció': formData.descripcio,
+        'Petició': formData.peticio || undefined,
+      };
+
+      if (formData.pobleId) {
+        fields.Poble = [formData.pobleId];
+      }
+      
+      if (formData.sectors.length > 0) {
+        fields.Sector = formData.sectors;
+      }
+
+      // Remove undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
       });
 
+      const response = await fetch(
+        `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Membres`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fields }),
+        }
+      );
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Error en enviar el formulari');
+        throw new Error('Error en guardar les dades');
       }
 
       setSuccess(true);
@@ -127,7 +183,7 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
           Registre completat!
         </h2>
         <p className="text-gray-600 mb-6">
-          Benvingut/da a Cafè & Sinergies {pobleName}. Aviat rebràs informació sobre les properes trobades.
+          Benvingut/da a Cafè & Sinergies {pobleSeleccionat?.nom}. Aviat rebràs informació sobre les properes trobades.
         </p>
         <a 
           href="/"
@@ -139,8 +195,37 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
     );
   }
 
+  // Step 0: Sense token vàlid
+  if (step === 0) {
+    return (
+      <div className="bg-white rounded-2xl p-8 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+          ⚠️
+        </div>
+        <h1 className="font-display text-2xl font-bold text-gray-900 mb-4">
+          Accés no autoritzat
+        </h1>
+        <p className="text-gray-600 mb-6">
+          {error || 'Necessites un link d\'invitació vàlid per accedir al formulari.'}
+        </p>
+        <a 
+          href="/#contacte" 
+          className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
+        >
+          Contactar per obtenir invitació
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-2xl p-8">
+      {/* Poble seleccionat */}
+      <div className="mb-6 p-4 bg-primary-50 rounded-xl text-center">
+        <p className="text-sm text-gray-600">Grup de</p>
+        <p className="font-semibold text-primary-600">{pobleSeleccionat?.nom}</p>
+      </div>
+
       {/* Progress bar */}
       <div className="flex items-center gap-2 mb-8">
         {[1, 2, 3].map((s) => (
@@ -327,21 +412,21 @@ export default function FormulariAlta({ pobleId, pobleName, sectors }: Props) {
               </label>
               <div className="space-y-3">
                 <input
-                  type="url"
+                  type="text"
                   value={formData.instagram}
                   onChange={(e) => updateField('instagram', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Instagram (URL o @usuari)"
                 />
                 <input
-                  type="url"
+                  type="text"
                   value={formData.linkedin}
                   onChange={(e) => updateField('linkedin', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="LinkedIn (URL)"
                 />
                 <input
-                  type="url"
+                  type="text"
                   value={formData.youtube}
                   onChange={(e) => updateField('youtube', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"

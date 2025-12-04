@@ -1,17 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import FormulariSinergia from '../components/FormulariSinergia';
-import { getMembres } from '../lib/airtable';
+import FormulariAlta from '../components/FormulariAlta';
+import { getSectors, getPobles } from '../lib/airtable';
 
-const membresRaw = await getMembres();
-const membres = membresRaw.map(m => ({
-  id: m.id,
-  nom: `${m.fields.Nom} ${m.fields.Cognoms || ''}`.trim(),
-  empresa: m.fields.Empresa || undefined,
-}));
+const sectors = await getSectors();
+const pobles = await getPobles();
 ---
 
-<Layout title="Registrar sinergia">
+<Layout title="Formulari d'alta">
   <header class="bg-primary-500 shadow-lg">
     <div class="max-w-4xl mx-auto px-6 py-4">
       <a href="/" class="flex items-center gap-3">
@@ -25,16 +21,17 @@ const membres = membresRaw.map(m => ({
     <div class="max-w-2xl mx-auto px-6">
       <div class="text-center mb-8">
         <h1 class="font-display text-3xl font-bold text-gray-900 mb-2">
-          Registrar una sinergia
+          Registre a Cafè & Sinergies
         </h1>
         <p class="text-gray-600">
-          Has col·laborat amb algú del grup? Deixa'n constància!
+          Omple les teves dades per unir-te a la comunitat
         </p>
       </div>
       
-      <FormulariSinergia 
+      <FormulariAlta 
         client:load 
-        membres={membres}
+        pobles={pobles.map(p => ({ id: p.id, nom: p.fields.Nom, token: p.fields.Token }))}
+        sectors={sectors.map(s => ({ id: s.id, nom: s.fields.Nom }))}
       />
     </div>
   </main>
