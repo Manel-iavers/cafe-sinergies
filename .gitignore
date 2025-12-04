@@ -1,0 +1,18 @@
+# Dependències
+node_modules/
+
+# Build
+dist/
+.vercel/
+
+# Env
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

@@ -1,0 +1,78 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import FormulariAlta from '../../components/FormulariAlta';
+import { getPobleByToken, getSectors } from '../../lib/airtable';
+
+// Get token from URL
+const { poble: pobleSlug } = Astro.params;
+const token = Astro.url.searchParams.get('t');
+
+// Validate token
+let poble = null;
+let sectors: { id: string; fields: { Nom: string } }[] = [];
+let error = '';
+
+if (!token) {
+  error = 'Necessites un link d\'invitació vàlid per accedir al formulari.';
+} else {
+  poble = await getPobleByToken(token);
+  if (!poble) {
+    error = 'El link d\'invitació no és vàlid o ha caducat.';
+  } else {
+    sectors = await getSectors();
+  }
+}
+---
+
+<Layout title={poble ? `Alta - ${poble.fields.Nom}` : 'Formulari d\'alta'}>
+  <header class="bg-primary-500 shadow-lg">
+    <div class="max-w-4xl mx-auto px-6 py-4">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/logoCOLBN.png" alt="Cafè & Sinergies" class="h-10 w-auto" />
+        <span class="font-display font-semibold text-xl text-white">Cafè & Sinergies</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="py-12 bg-primary-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-6">
+      {error ? (
+        <div class="bg-white rounded-2xl p-8 text-center">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            ⚠️
+          </div>
+          <h1 class="font-display text-2xl font-bold text-gray-900 mb-4">
+            Accés no autoritzat
+          </h1>
+          <p class="text-gray-600 mb-6">{error}</p>
+          <a 
+            href="/#contacte" 
+            class="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-full font-medium transition-colors"
+          >
+            Contactar per obtenir invitació
+          </a>
+        </div>
+      ) : (
+        <div>
+          <div class="text-center mb-8">
+            <h1 class="font-display text-3xl font-bold text-gray-900 mb-2">
+              Registre a Cafè & Sinergies
+            </h1>
+            <p class="text-gray-600">
+              Grup de <span class="font-medium text-primary-600">{poble?.fields.Nom}</span>
+            </p>
+          </div>
+          
+          <FormulariAlta 
+            client:load 
+            pobleId={poble?.id} 
+            pobleName={poble?.fields.Nom}
+            sectors={sectors.map(s => ({ id: s.id, nom: s.fields.Nom }))}
+          />
+        </div>
+      )}
+    </div>
+  </main>
+</Layout>

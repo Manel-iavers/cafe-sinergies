@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+import FormulariSinergia from '../components/FormulariSinergia';
+import { getMembres } from '../lib/airtable';
+
+const membres = await getMembres();
+---
+
+<Layout title="Registrar sinergia">
+  <header class="bg-primary-500 shadow-lg">
+    <div class="max-w-4xl mx-auto px-6 py-4">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/logoCOLBN.png" alt="Cafè & Sinergies" class="h-10 w-auto" />
+        <span class="font-display font-semibold text-xl text-white">Cafè & Sinergies</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="py-12 bg-primary-50 min-h-screen">
+    <div class="max-w-2xl mx-auto px-6">
+      <div class="text-center mb-8">
+        <h1 class="font-display text-3xl font-bold text-gray-900 mb-2">
+          Registrar una sinergia
+        </h1>
+        <p class="text-gray-600">
+          Has col·laborat amb algú del grup? Registra-ho aquí!
+        </p>
+      </div>
+      
+      <FormulariSinergia 
+        client:load 
+        membres={membres.map(m => ({ 
+          id: m.id, 
+          nom: `${m.fields.Nom} ${m.fields.Cognoms}`,
+          empresa: m.fields.Empresa || ''
+        }))}
+      />
+    </div>
+  </main>
+</Layout>

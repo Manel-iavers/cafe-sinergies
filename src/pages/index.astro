@@ -1,0 +1,278 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getStats, getPobles, getSectors, getSinergies } from '../lib/airtable';
+
+// Fetch data at build time
+const stats = await getStats();
+const pobles = await getPobles();
+const sectors = await getSectors();
+const sinergies = await getSinergies();
+---
+
+<Layout title="Portal Membres">
+  <!-- Header -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-primary-500 shadow-lg">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3">
+        <img src="/logoCOLBN.png" alt="Cafè & Sinergies" class="h-10 w-auto" />
+        <span class="font-display font-semibold text-xl text-white">Cafè & Sinergies</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-6">
+        <a href="#comunitat" class="text-white/80 hover:text-white transition-colors">La comunitat</a>
+        <a href="#sinergies" class="text-white/80 hover:text-white transition-colors">Sinergies</a>
+        <a href="/sinergia" class="bg-white text-primary-600 px-4 py-2 rounded-full font-medium hover:bg-primary-50 transition-colors">
+          + Nova sinergia
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero Section - Per membres -->
+    <section class="relative min-h-[70vh] flex items-center justify-center overflow-hidden pt-20">
+      <!-- Background gradient -->
+      <div class="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700"></div>
+      
+      <!-- Decorative elements -->
+      <div class="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+      
+      <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <p class="text-primary-200 font-medium mb-4 tracking-wide uppercase text-sm">
+          Benvingut/da a
+        </p>
+        
+        <h1 class="font-display text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+          Cafè & Sinergies
+        </h1>
+        
+        <p class="text-xl text-primary-100 mb-10 max-w-2xl mx-auto leading-relaxed">
+          El teu espai de networking. Connecta amb altres membres, 
+          registra col·laboracions i fes créixer el teu negoci.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a 
+            href="#formulari-alta" 
+            class="inline-flex items-center gap-2 bg-white text-primary-600 px-8 py-4 rounded-full font-medium text-lg transition-all hover:shadow-lg hover:bg-primary-50"
+          >
+            <span>📝</span>
+            <span>Completar el meu perfil</span>
+          </a>
+          <a 
+            href="/sinergia" 
+            class="inline-flex items-center gap-2 bg-primary-400 hover:bg-primary-300 text-white px-8 py-4 rounded-full font-medium text-lg transition-all"
+          >
+            <span>🤝</span>
+            <span>Registrar una sinergia</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 bg-white border-b border-primary-100">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div class="text-center">
+            <p class="font-display text-4xl font-bold text-primary-500 mb-1">{stats.totalMembres}</p>
+            <p class="text-gray-600 text-sm">membres</p>
+          </div>
+          <div class="text-center">
+            <p class="font-display text-4xl font-bold text-primary-500 mb-1">{stats.totalSectors}</p>
+            <p class="text-gray-600 text-sm">sectors</p>
+          </div>
+          <div class="text-center">
+            <p class="font-display text-4xl font-bold text-primary-500 mb-1">{stats.totalSinergies}</p>
+            <p class="text-gray-600 text-sm">sinergies</p>
+          </div>
+          <div class="text-center">
+            <p class="font-display text-4xl font-bold text-primary-500 mb-1">{stats.totalPobles}</p>
+            <p class="text-gray-600 text-sm">pobles</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Accions ràpides -->
+    <section class="py-16 bg-primary-50">
+      <div class="max-w-4xl mx-auto px-6">
+        <h2 class="font-display text-2xl font-bold text-gray-900 mb-8 text-center">
+          Què vols fer?
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Completar perfil -->
+          <div id="formulari-alta" class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-primary-100">
+            <div class="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center text-2xl mb-4">
+              📝
+            </div>
+            <h3 class="font-display text-xl font-semibold text-gray-900 mb-2">
+              Completar el meu perfil
+            </h3>
+            <p class="text-gray-600 mb-6">
+              Omple les teves dades perquè altres membres et puguin conèixer i contactar.
+            </p>
+            
+            <div class="space-y-3">
+              <p class="text-sm text-gray-500 font-medium">Selecciona el teu grup:</p>
+              {pobles.map((poble) => (
+                <a 
+                  href={`/alta/${poble.fields.Nom.toLowerCase().replace(/ /g, '-')}?t=${poble.fields.Token}`}
+                  class="flex items-center justify-between p-4 bg-primary-50 rounded-xl hover:bg-primary-100 transition-colors group"
+                >
+                  <span class="font-medium text-gray-900">📍 {poble.fields.Nom}</span>
+                  <span class="text-primary-500 group-hover:translate-x-1 transition-transform">→</span>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Registrar sinergia -->
+          <a href="/sinergia" class="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow border border-primary-100 group">
+            <div class="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center text-2xl mb-4">
+              🤝
+            </div>
+            <h3 class="font-display text-xl font-semibold text-gray-900 mb-2">
+              Registrar una sinergia
+            </h3>
+            <p class="text-gray-600 mb-6">
+              Has col·laborat amb algú del grup? Registra-ho perquè quedi constància!
+            </p>
+            <div class="flex items-center text-primary-500 font-medium">
+              <span>Registrar ara</span>
+              <span class="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sinergies recents -->
+    <section id="sinergies" class="py-16 bg-white">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="flex items-center justify-between mb-8">
+          <h2 class="font-display text-2xl font-bold text-gray-900">
+            Sinergies recents
+          </h2>
+          <a href="/sinergia" class="text-primary-500 hover:text-primary-600 font-medium flex items-center gap-1">
+            <span>+ Afegir</span>
+          </a>
+        </div>
+        
+        {sinergies.length > 0 ? (
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sinergies.slice(0, 6).map((sinergia) => (
+              <div class="bg-primary-50 rounded-xl p-6 border border-primary-100">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="text-xl">🤝</span>
+                  <h3 class="font-semibold text-gray-900">{sinergia.fields.Títol}</h3>
+                </div>
+                {sinergia.fields.Descripció && (
+                  <p class="text-gray-600 text-sm mb-3">{sinergia.fields.Descripció}</p>
+                )}
+                {sinergia.fields.Tipus && (
+                  <div class="flex flex-wrap gap-2">
+                    {(Array.isArray(sinergia.fields.Tipus) ? sinergia.fields.Tipus : [sinergia.fields.Tipus]).map((tipus: string) => (
+                      <span class="text-xs bg-primary-200 text-primary-700 px-2 py-1 rounded-full">
+                        {tipus}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="text-center py-12 bg-primary-50 rounded-2xl">
+            <p class="text-gray-500 mb-4">Encara no hi ha sinergies registrades</p>
+            <a href="/sinergia" class="text-primary-500 font-medium hover:text-primary-600">
+              Sigues el primer en registrar-ne una →
+            </a>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- Comunitat / Sectors -->
+    <section id="comunitat" class="py-16 bg-primary-50">
+      <div class="max-w-6xl mx-auto px-6">
+        <h2 class="font-display text-2xl font-bold text-gray-900 mb-4 text-center">
+          La nostra comunitat
+        </h2>
+        <p class="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
+          Som professionals de diversos sectors que comparteixen, col·laboren i creixen junts.
+        </p>
+        
+        <div class="flex flex-wrap justify-center gap-3">
+          {sectors.map((sector) => (
+            <span class="bg-white px-4 py-2 rounded-full text-gray-700 border border-primary-200 text-sm">
+              {sector.fields.Nom}
+            </span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Cafè & Sinergies -->
+    <section class="py-16 bg-white">
+      <div class="max-w-4xl mx-auto px-6">
+        <div class="bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl p-8 md:p-12 text-center text-white">
+          <h2 class="font-display text-3xl font-bold mb-4">
+            Què és Cafè & Sinergies?
+          </h2>
+          <p class="text-primary-100 mb-6 max-w-2xl mx-auto leading-relaxed">
+            Un punt de trobada per a autònoms i emprenedors del Maresme. 
+            Ens reunim regularment per compartir experiències, rebre formació pràctica 
+            i crear col·laboracions reals entre nosaltres.
+          </p>
+          <a 
+            href="https://comunicaccio.com/cafe-sinergies/" 
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 bg-white text-primary-600 px-6 py-3 rounded-full font-medium hover:bg-primary-50 transition-colors"
+          >
+            Més informació a ComunicAcció
+            <span>↗</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contacte -->
+    <section class="py-12 bg-primary-50 border-t border-primary-100">
+      <div class="max-w-4xl mx-auto px-6 text-center">
+        <p class="text-gray-600 mb-4">
+          Organitza: <strong>Marta Hernández</strong> (ComunicAcció)
+        </p>
+        <div class="flex items-center justify-center gap-4">
+          <a href="mailto:marta@comunicaccio.net" class="text-primary-500 hover:text-primary-600">
+            📧 marta@comunicaccio.net
+          </a>
+          <span class="text-gray-300">|</span>
+          <a href="tel:659185816" class="text-primary-500 hover:text-primary-600">
+            📱 659 18 58 16
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-primary-900 text-primary-200 py-6">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+      <p class="flex items-center justify-center gap-3 text-sm mb-2">
+        <img src="/logoCOLBN.png" alt="Cafè & Sinergies" class="h-6 w-auto" />
+        <span>Cafè & Sinergies</span>
+        <span class="text-primary-400">·</span>
+        <span>Un projecte de</span>
+        <a href="https://comunicaccio.com" target="_blank" rel="noopener" class="text-primary-400 hover:text-primary-300">
+          ComunicAcció
+        </a>
+      </p>
+      <p class="text-xs text-primary-400">
+        Creat per <a href="https://www.iavers.com" target="_blank" rel="noopener" class="text-primary-300 hover:text-white">IAvers</a>
+      </p>
+    </div>
+  </footer>
+</Layout>
