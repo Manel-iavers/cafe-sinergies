@@ -1,12 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import { getStats, getPobles, getSectors, getSinergies } from '../lib/airtable';
+import { getAllData } from '../lib/airtable';
 
-// Fetch data at build time
-const stats = await getStats();
-const pobles = await getPobles();
-const sectors = await getSectors();
-const sinergies = await getSinergies();
+// Fetch all data in a single batch (4 API calls instead of 7)
+const { stats, pobles, sectors, sinergies } = await getAllData();
 ---
 
 <Layout title="Portal Membres">

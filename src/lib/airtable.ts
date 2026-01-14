@@ -152,7 +152,7 @@ export async function createSinergia(data: Partial<Sinergia>) {
   return createRecord<Sinergia>(TABLES.sinergies, data);
 }
 
-export async function getStats() {
+export async function getAllData() {
   const [membres, sectors, sinergies, pobles] = await Promise.all([
     getMembres(),
     getSectors(),
@@ -161,9 +161,15 @@ export async function getStats() {
   ]);
 
   return {
-    totalMembres: membres.length,
-    totalSectors: sectors.length,
-    totalSinergies: sinergies.length,
-    totalPobles: pobles.length,
+    membres,
+    sectors,
+    sinergies,
+    pobles,
+    stats: {
+      totalMembres: membres.length,
+      totalSectors: sectors.length,
+      totalSinergies: sinergies.length,
+      totalPobles: pobles.length,
+    },
   };
 }
